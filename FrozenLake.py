@@ -9,41 +9,39 @@ class QLearningAgent(object):
         self.observation_space = observation_space
         self.qmatrix = [[0.1 for x in range(action_space.n)] for y in range(observation_space.n)]
 
-        self.lastState = 0
-        self.lastAction = -1
-        self.updateMatrix = True
+        self.last_state = 0
+        self.last_action = -1
         self.DF = 0.99
         self.LF = 0.1
 
     def act(self, state, reward, done, episode):
-        if self.lastAction != -1:
+        if self.last_action != -1:
             self.recalculate(state, reward)
-        action = self.getAction(state, episode)
-        self.lastAction = action
-        self.lastState = state
+        action = self.get_action(state, episode)
+        self.last_action = action
+        self.last_state = state
         return action
 
     
-    def getAction(self, state, t):
+    def get_action(self, state, t):
         maxAction = numpy.argmax(self.qmatrix[state])
         cond = random.uniform(0, 1) > float(100)/(t + 1)
         return maxAction if cond else random.randint(0, self.action_space.n - 1)
 
     def recalculate(self, state, reward):
-        oldValue = self.qmatrix[self.lastState][self.lastAction];
+        oldValue = self.qmatrix[self.last_state][self.last_action];
         maxValue = numpy.amax(self.qmatrix[state]) 
         newValue = oldValue + self.LF * (reward  + self.DF * maxValue - oldValue)
-        self.qmatrix[self.lastState][self.lastAction] = newValue
+        self.qmatrix[self.last_state][self.last_action] = newValue
 
-def run(agent, updateMatrix = True, count = 10000):
-    agent.updateMatrix = updateMatrix
+def run(agent, count = 10000):
     episode_count = count
     wins = 0
     last100 = []
     averageScore = 0
     for i_episode in range(episode_count):
         observation = env.reset()
-        agent.lastAction = -1
+        agent.last_action = -1
         reward = 0
         done = False
         while True:
