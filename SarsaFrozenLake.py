@@ -1,19 +1,20 @@
 import gym
 import random
 import numpy
-env = gym.make('FrozenLake8x8-v0')
+env = gym.make('FrozenLake-v0')
 
 
 class QLearningAgent(object):
     def __init__(self, action_space, observation_space):
         self.action_space = action_space
         self.observation_space = observation_space
-        self.qmatrix = [[0.1 for _ in range(action_space.n)] for _ in range(observation_space.n)]
-
+        self.qmatrix = [[0 for _ in range(action_space.n)] for _ in range(observation_space.n)]
+        self.e = numpy.zeros((self.observation_space.n, self.action_space.n))
         self.last_state = 0
         self.last_action = -1
         self.DF = 0.99
         self.LF = 0.1
+        self.lam = 0.2
 
     def act(self, state, reward, done, episode):
         action = self.get_action(state, episode)
@@ -21,6 +22,8 @@ class QLearningAgent(object):
             self.recalculate(state, reward, action)
         self.last_action = action
         self.last_state = state
+        if done:
+            self.e = numpy.zeros((self.observation_space.n, self.action_space.n))
         return action
     
     def get_action(self, state, t):
@@ -31,8 +34,12 @@ class QLearningAgent(object):
     def recalculate(self, state, reward, next_action):
         old_value = self.qmatrix[self.last_state][self.last_action]
         next_value = self.qmatrix[state][next_action]
-        new_value = old_value + self.LF * (reward + self.DF * next_value - old_value)
-        self.qmatrix[self.last_state][self.last_action] = new_value
+        delta = reward + self.DF * next_value - old_value
+        self.e[self.last_state][self.last_action] += 1
+        for state_ in range(self.observation_space.n):
+            for action_ in range(self.action_space.n):
+                self.qmatrix[state_][action_] += self.LF * self.e[state_][action_] * delta
+                self.e[state_][action_] *= self.lam * self.DF
 
 
 def run(agent, count=10000):
@@ -60,8 +67,7 @@ def run(agent, count=10000):
                     wins += 1
                 break
 
-        print(average_score)
-        if average_score >= 0.99:
+        if average_score >= 0.78:
             print(average_score, i_episode)
             break
     # print(wins, episode_count)
