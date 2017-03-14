@@ -5,15 +5,18 @@ env = gym.make('FrozenLake-v0')
 
 
 class QLearningAgent(object):
-    def __init__(self, action_space, observation_space):
+    def __init__(self, action_space, observation_space, DF, LF):
         self.action_space = action_space
         self.observation_space = observation_space
-        self.qmatrix = [[0.1 for x in range(action_space.n)] for y in range(observation_space.n)]
-
+        self.qmatrix = [[0.1 for _ in range(action_space.n)] for _ in range(observation_space.n)]
         self.last_state = 0
         self.last_action = -1
-        self.DF = 0.99
-        self.LF = 0.1
+        self.DF = DF
+        self.LF = LF
+
+    def reset(self):
+        self.last_state = 0
+        self.last_action = -1
 
     def act(self, state, reward, done, episode):
         if self.last_action != -1:
@@ -22,7 +25,7 @@ class QLearningAgent(object):
         self.last_action = action
         self.last_state = state
         return action
-    
+
     def get_action(self, state, t):
         max_action = numpy.argmax(self.qmatrix[state])
         cond = random.uniform(0, 1) > float(100)/(t + 1)
@@ -36,13 +39,13 @@ class QLearningAgent(object):
 
 
 def run(agent, count=10000):
-    episode_count = count
-    wins = 0
     last100 = []
     average_score = 0
-    for i_episode in range(episode_count):
+    i_episode = 0
+    while True:
+        i_episode += 1
+        agent.reset()
         observation = env.reset()
-        agent.last_action = -1
         reward = 0
         done = False
         while True:
@@ -54,19 +57,14 @@ def run(agent, count=10000):
                     last100.pop(0)
                     average_score = numpy.mean(last100)
                 agent.act(observation, reward, done, i_episode)
-                if reward == 1:
-                    wins += 1
                 break
 
         if average_score >= 0.78:
             print(average_score, i_episode)
             break
-    # print(wins, episode_count)
-    # print(float(wins)/episode_count)
-    # policy = map(numpy.argmax, agent.qmatrix)
-    # print(policy)
-    # print(agent.qmatrix)
 
 if __name__ == '__main__':
-    agent = QLearningAgent(env.action_space, env.observation_space)
-    run(agent)
+    for i in xrange(0, 10):
+        print "game {}".format(i),
+        agent = QLearningAgent(env.action_space, env.observation_space, 0.99, 0.1)
+        run(agent)
