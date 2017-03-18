@@ -28,4 +28,4 @@ class Tile(object):
         self.x = x
         self.y = y
         self.value = value
-        self.merged_from = None
+        self.merged = False

@@ -21,6 +21,7 @@ class Game2048(object):
         self.start_tiles = 2
         self.action_space = 4
         self.observation_space = 8
+
         self.over = False
         self.won = False
         self.grid = Grid(self.size)
@@ -72,7 +73,7 @@ class Game2048(object):
         newX = tile.x + vector.x
         newY = tile.y + vector.y
         if self._is_in_bounds(Vector(newX, newY)):
-            return self.grid[newX][newY]
+            return self.grid[newY][newX]
 
         return None
 
@@ -82,7 +83,7 @@ class Game2048(object):
     def _moves_available(self):
         for x in range(self.size):
             for y in range(self.size):
-                tile = self.grid[x][y]
+                tile = self.grid[y][x]
                 if tile.value == 0 or self._is_tile_matches_available(tile):
                     return True
 
@@ -105,7 +106,8 @@ class Game2048(object):
 
         for x in traversals.x:
             for y in traversals.y:
-                tile = self.grid[x][y]
+                tile = self.grid[y][x]
+                assert tile.x == x and tile.y == y
                 if tile.value == 0:
                     continue
                 farthest, next_cell = self._find_farthest_position(tile, vector)
