@@ -1,8 +1,7 @@
 import gym
 import random
 import numpy
-env = gym.make('FrozenLake8x8-v0')
-
+env = gym.make('Taxi-v2')
 
 class QLearningAgent(object):
     def __init__(self, action_space, observation_space, DF, LF):
@@ -43,6 +42,7 @@ def run(agent, count=10000):
     average_score = 0
     i_episode = 0
     while True:
+        score = 0
         i_episode += 1
         agent.reset()
         observation = env.reset()
@@ -51,17 +51,16 @@ def run(agent, count=10000):
         while True:
             action = agent.act(observation, reward, done, i_episode)
             observation, reward, done, info = env.step(action)
+            score += reward
             if done:
-                last100.append(reward)
-                if len(last100) > 100:
+                last100.append(score)
+                if len(last100) > 99:
                     last100.pop(0)
                     average_score = numpy.mean(last100)
                 agent.act(observation, reward, done, i_episode)
                 break
-        if i_episode % 1000 == 0:
-            print(average_score, i_episode)
 
-        if average_score >= 0.99:
+        if average_score >= 9.7:
             print(average_score, i_episode)
             return i_episode
 
@@ -69,7 +68,7 @@ if __name__ == '__main__':
     statistics = []
     for i in xrange(0, 10):
         print "game {}".format(i),
-        agent = QLearningAgent(env.action_space, env.observation_space, 0.999, 0.8)
+        agent = QLearningAgent(env.action_space, env.observation_space, 0.9, 0.8)
         statistics.append(run(agent))
     assert len(statistics) == 10
     print numpy.mean(statistics)

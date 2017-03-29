@@ -12,23 +12,24 @@ class QLearningAgent(object):
 
         self.last_state = 0
         self.last_action = 1
-        self.DF = 0.99
+        self.DF = 0.5
         self.LF = 0.1
 
         self.states = {}
-        i = 0
+
         for action in range(self.action_space):
             for res in range(2):
-                self.states[action * 10 + res] = i
-                i += 1
+                self.states[action * 10 + res] = action
+
+    def reset(self):
+        self.last_action = 1
 
     def get_state(self, action, result):
         return self.states[action * 10 + result]
 
-    def act(self, state, reward, done, episode, success):
+    def act(self, reward, episode, success):
         state = self.get_state(self.last_action, success)
-        if self.last_action != -1:
-            self.recalculate(state, reward)
+        self.recalculate(state, reward)
         action = self.get_action(state, episode)
         self.last_state = state
         self.last_action = action
@@ -51,21 +52,21 @@ def run(agent, count=10000):
     episode_count = count
     for i_episode in range(episode_count):
         env.reset()
-        agent.last_action = 1
-        observation, reward, done, success = env.step(1)
+        agent.reset()
+        action = agent.last_action
+        observation, reward, done, success = env.step(action)
         score = reward
         for step in range(1000):
-            action = agent.act(observation, reward, done, i_episode, success)
+            action = agent.act(reward, i_episode, success)
             observation, reward, done, success = env.step(action)
             score += reward
             if done:
                 results.append(score)
-                agent.act(observation, reward, done, i_episode, success)
+                agent.act(reward, i_episode, success)
                 break
 
-    average_score = numpy.mean(results)
+    print numpy.mean(results), numpy.median(results)
 
-    print (average_score)
     policy = map(numpy.argmax, agent.qmatrix)
     print(policy)
     # print(agent.qmatrix)
