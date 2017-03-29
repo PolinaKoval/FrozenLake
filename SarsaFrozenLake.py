@@ -8,7 +8,7 @@ class SarsaAgent(object):
     def __init__(self, action_space, observation_space, DF, LF, lam, er, er_limit):
         self.action_space = action_space
         self.observation_space = observation_space
-        self.qmatrix = [[0.5 for _ in range(action_space.n)] for _ in range(observation_space.n)]
+        self.qmatrix = numpy.array([[1.0 for _ in range(action_space.n)] for _ in range(observation_space.n)])
         self.e = numpy.zeros((self.observation_space.n, self.action_space.n))
         self.last_state = 0
         self.last_action = -1
@@ -34,7 +34,7 @@ class SarsaAgent(object):
     
     def get_action(self, state, t):
         max_action = numpy.argmax(self.qmatrix[state])
-        cond = random.uniform(0, 1) > self.er or t > self.er_limit
+        cond = random.random() >= self.er or t > self.er_limit
         return max_action if cond else random.randint(0, self.action_space.n - 1)
 
     def recalculate(self, state, reward, done, next_action):
@@ -46,10 +46,8 @@ class SarsaAgent(object):
         if done:
             delta = reward - old_value
 
-        for state_ in range(self.observation_space.n):
-            for action_ in range(self.action_space.n):
-                self.qmatrix[state_][action_] += self.LF * self.e[state_][action_] * delta
-                self.e[state_][action_] *= self.lam * self.DF
+        self.qmatrix += self.LF * self.e * delta
+        self.e *= self.lam * self.DF
 
 
 def run(agent, count=10000):
@@ -81,7 +79,7 @@ if __name__ == '__main__':
     statistics = []
     for i in xrange(0, 10):
         print "game {}".format(i),
-        agent = SarsaAgent(env.action_space, env.observation_space, 0.9, 0.1, 0.2, 0.0, 100)
+        agent = SarsaAgent(env.action_space, env.observation_space, 0.99, 0.2, 0.5, 0.005, 100)
         statistics.append(run(agent))
     assert len(statistics) == 10
     print statistics
