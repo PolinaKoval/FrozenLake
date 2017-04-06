@@ -1,8 +1,5 @@
-import gym
 import random
 import numpy
-env = gym.make('FrozenLake-v0')
-
 
 class SarsaAgent(object):
     def __init__(self, action_space, observation_space, DF, LF, lam, er, er_limit):
@@ -31,7 +28,7 @@ class SarsaAgent(object):
         self.last_state = state
 
         return action
-    
+
     def get_action(self, state, t):
         max_action = numpy.argmax(self.qmatrix[state])
         cond = random.random() >= self.er or t > self.er_limit
@@ -49,38 +46,5 @@ class SarsaAgent(object):
         self.qmatrix += self.LF * self.e * delta
         self.e *= self.lam * self.DF
 
-
-def run(agent, count=10000):
-    last100 = []
-    average_score = 0
-    i_episode = 0
-    while True:
-        i_episode += 1
-        agent.reset()
-        observation = env.reset()
-        reward = 0
-        done = False
-        while True:
-            action = agent.act(observation, reward, done, i_episode)
-            observation, reward, done, info = env.step(action)
-            if done:
-                last100.append(reward)
-                if len(last100) > 100:
-                    last100.pop(0)
-                    average_score = numpy.mean(last100)
-                agent.act(observation, reward, done, i_episode)
-                break
-
-        if average_score >= 0.78:
-            print(average_score, i_episode)
-            return i_episode
-
-if __name__ == '__main__':
-    statistics = []
-    for i in xrange(0, 10):
-        print "game {}".format(i),
-        agent = SarsaAgent(env.action_space, env.observation_space, 0.99, 0.2, 0.5, 0.005, 100)
-        statistics.append(run(agent))
-    assert len(statistics) == 10
-    print statistics
-    print numpy.mean(statistics)
+def agent(action_space, observation_space):
+    return SarsaAgent(action_space, observation_space, 0.999, 0.4, 0.2, 0.001, 10000)
